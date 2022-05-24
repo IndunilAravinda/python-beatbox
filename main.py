@@ -1,5 +1,5 @@
 from pickle import TRUE
-from turtle import color
+from turtle import back, color
 import pygame
 from pygame import mixer
 
@@ -38,6 +38,8 @@ clicked = [
     [-1 for _ in range(beats)] for _ in range(instruments)
 ]  # -1 is not active & 1 is active
 
+active_list = [1 for _ in range(instruments)]
+
 bpm = 240
 playing = True
 active_length = 0
@@ -63,7 +65,7 @@ pygame.mixer.set_num_channels(instruments * 3)
 
 def play_notes():
     for i in range(len(clicked)):
-        if clicked[i][active_beat] == 1:
+        if clicked[i][active_beat] == 1 and active_list[i] == 1:
             if i == 0:
                 hi_hat.play()
             if i == 1:
@@ -81,7 +83,7 @@ def play_notes():
 # UI of the beatbox
 
 
-def draw_grid(clicks, beat):
+def draw_grid(clicks, beat, actives):
 
     # left menu
     left_box = pygame.draw.rect(
@@ -96,27 +98,27 @@ def draw_grid(clicks, beat):
     # music controllers
 
     # hi hat
-    hi_hat_text = label_font.render("Hi Hat", True, white)
+    hi_hat_text = label_font.render("Hi Hat", True, colors[actives[0]])
     screen.blit(hi_hat_text, (30, 30))
 
     # Snare
-    snare_text = label_font.render("Snare", True, white)
+    snare_text = label_font.render("Snare", True, colors[actives[1]])
     screen.blit(snare_text, (30, 130))
 
     # Kick/base
-    kick_text = label_font.render("Bass", True, white)
+    kick_text = label_font.render("Bass", True, colors[actives[2]])
     screen.blit(kick_text, (30, 230))
 
     # Crash
-    crash_text = label_font.render("Crash", True, white)
+    crash_text = label_font.render("Crash", True, colors[actives[3]])
     screen.blit(crash_text, (30, 330))
 
     # Clap
-    clap_text = label_font.render("Clap", True, white)
+    clap_text = label_font.render("Clap", True, colors[actives[4]])
     screen.blit(clap_text, (30, 430))
 
     # Floor Tom
-    floor_text = label_font.render("Floor Tom", True, white)
+    floor_text = label_font.render("Floor Tom", True, colors[actives[5]])
     screen.blit(floor_text, (30, 530))
 
     # seperating each controllers with lines
@@ -128,7 +130,10 @@ def draw_grid(clicks, beat):
             if clicks[j][i] == -1:
                 color = gray
             else:
-                color = green
+                if actives[j] == 1:
+                    color = green
+                else:
+                    color = background_color
 
             rect = pygame.draw.rect(
                 screen,
@@ -192,7 +197,7 @@ run = True
 while run:
     timer.tick(fps)
     screen.fill(background_color)  # background color
-    boxes = draw_grid(clicked, active_beat)
+    boxes = draw_grid(clicked, active_beat, active_list)
 
     # bottom menu
 
@@ -206,6 +211,45 @@ while run:
         play_text2 = medium_font.render("Paused", True, green)
 
     screen.blit(play_text2, (70, HEIGHT - 100))
+
+    # bpm adjust
+    bpm_rect = pygame.draw.rect(screen, gray, [300, HEIGHT - 150, 200, 100], 5, 5)
+    bpm_text = medium_font.render("Beats per Minute", True, white)
+    screen.blit(bpm_text, (308, HEIGHT - 130))
+    bpm_num = label_font.render(f"{bpm}", True, green)
+    screen.blit(bpm_num, (370, HEIGHT - 100))
+
+    bpm_add_rect = pygame.draw.rect(screen, gray, [510, HEIGHT - 150, 48, 48], 0, 5)
+    bpm_sub_rect = pygame.draw.rect(screen, gray, [510, HEIGHT - 100, 48, 48], 0, 5)
+    add_text = medium_font.render("+5", True, white)
+    sub_text = medium_font.render("-5", True, white)
+    screen.blit(add_text, (520, HEIGHT - 140))
+    screen.blit(sub_text, (520, HEIGHT - 90))
+
+    # beats adjust
+    beats_rect = pygame.draw.rect(screen, gray, [600, HEIGHT - 150, 200, 100], 5, 5)
+    beats_text = medium_font.render("Beats Loop", True, white)
+    screen.blit(beats_text, (638, HEIGHT - 130))
+    beats_text2 = label_font.render(f"{beats}", True, green)
+    screen.blit(beats_text2, (690, HEIGHT - 100))
+
+    beats_add_rect = pygame.draw.rect(screen, gray, [810, HEIGHT - 150, 48, 48], 0, 5)
+    beats_sub_rect = pygame.draw.rect(screen, gray, [810, HEIGHT - 100, 48, 48], 0, 5)
+    add_text2 = medium_font.render("+1", True, white)
+    sub_text2 = medium_font.render("-1", True, white)
+    screen.blit(add_text2, (820, HEIGHT - 140))
+    screen.blit(sub_text2, (820, HEIGHT - 90))
+
+    # Indunil Aravinda Coded
+    welcome_rect = pygame.draw.rect(screen, gray, [900, HEIGHT - 150, 450, 100], 5, 5)
+    indunil_aravinda = label_font.render("Indunil's BEATbox", True, green)
+    screen.blit(indunil_aravinda, (1010, HEIGHT - 120))
+
+    # instruments selection
+    instruments_rects = []
+    for i in range(instruments):
+        rect = pygame.rect.Rect((0, i * 100), (200, 100))
+        instruments_rects.append(rect)
 
     # play beats accordingly
     if beat_changed:
@@ -236,6 +280,23 @@ while run:
                     playing = False
                 elif not playing:
                     playing = True
+            elif bpm_add_rect.collidepoint(event.pos):
+                bpm += 5
+            elif bpm_sub_rect.collidepoint(event.pos):
+                bpm -= 5
+            elif beats_add_rect.collidepoint(event.pos):
+                beats += 1
+                for i in range(len(clicked)):
+                    clicked[i].append(-1)
+
+            elif beats_sub_rect.collidepoint(event.pos):
+                beats -= 1
+                for i in range(len(clicked)):
+                    clicked[i].pop(-1)
+
+            for i in range(len(instruments_rects)):
+                if instruments_rects[i].collidepoint(event.pos):
+                    active_list[i] *= -1
 
     beat_length = (fps * 60) // bpm
 
