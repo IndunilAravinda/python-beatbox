@@ -1,4 +1,5 @@
 from pickle import TRUE
+from turtle import color
 import pygame
 from pygame import mixer
 
@@ -15,6 +16,9 @@ black = (0, 0, 0)
 background_color = (19, 26, 46)
 white = (255, 255, 255)
 gray = (65, 78, 115)
+green = (0, 184, 80)
+gold = (212, 175, 55)
+blue = (0, 255, 255)
 
 # create the screen
 
@@ -26,11 +30,24 @@ fps = 60
 timer = pygame.time.Clock()
 beats = 8
 instruments = 6
+boes = []
+
+# matrix like representation of the beatmaker with clicks
+clicked = [
+    [-1 for _ in range(beats)] for _ in range(instruments)
+]  # -1 is not active & 1 is active
+
+bpm = 240
+playing = True
+active_length = 0
+active_beat = 1
+beat_changed = True
+
 
 # main game
 
 
-def draw_grid():
+def draw_grid(clicks, beat):
 
     # left menu
     left_box = pygame.draw.rect(
@@ -74,20 +91,64 @@ def draw_grid():
 
     for i in range(beats):
         for j in range(instruments):
+            if clicks[j][i] == -1:
+                color = gray
+            else:
+                color = green
+
             rect = pygame.draw.rect(
                 screen,
-                gray,
+                color,
+                [
+                    i * ((WIDTH - 200) // beats) + 200,
+                    (j * 100) + 5,
+                    ((WIDTH - 200) // beats) - 10,
+                    ((HEIGHT - 200) // instruments) - 10,
+                ],
+                0,
+                5,
+            )
+
+            pygame.draw.rect(
+                screen,
+                gold,
                 [
                     i * ((WIDTH - 200) // beats) + 200,
                     (j * 100),
                     ((WIDTH - 200) // beats),
                     ((HEIGHT - 200) // instruments),
                 ],
-                3,
+                5,
+                5,
+            )
+
+            pygame.draw.rect(
+                screen,
+                background_color,
+                [
+                    i * ((WIDTH - 200) // beats) + 200,
+                    (j * 100),
+                    ((WIDTH - 200) // beats),
+                    ((HEIGHT - 200) // instruments),
+                ],
+                2,
                 5,
             )
 
             boxes.append((rect, (i, j)))
+
+        active = pygame.draw.rect(
+            screen,
+            blue,
+            [
+                beat * ((WIDTH - 200) // beats) + 200,
+                0,
+                ((WIDTH - 200) // beats),
+                instruments * 100,
+            ],
+            5,
+            3,
+        )
 
     return boxes
 
@@ -97,12 +158,40 @@ run = True
 while run:
     timer.tick(fps)
     screen.fill(background_color)  # background color
-    draw_grid()
+    boxes = draw_grid(clicked, active_beat)
 
     # pygame event handling
     for event in pygame.event.get():
+
+        # quit game
         if event.type == pygame.QUIT:
             run = False
+
+        # click instrument boxes
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for i in range(len(boxes)):
+                if boxes[i][0].collidepoint(event.pos):
+                    coords = boxes[i][1]
+                    clicked[coords[1]][
+                        coords[0]
+                    ] *= (
+                        -1
+                    )  # if it is active, then deactivates, and if it is not active then lick will activate
+
+    beat_length = (fps * 60) // bpm
+
+    if playing:
+        if active_length < beat_length:
+            active_length += 1
+        else:
+            active_length = 0
+            if active_beat < beats - 1:
+                active_beat += 1
+                beat_changed = True
+            else:
+                active_beat = 0
+                beat_changed = True
+
     pygame.display.flip()
 
 pygame.quit()
