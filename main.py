@@ -25,6 +25,7 @@ blue = (0, 255, 255)
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption("Indunil MusicBox")
 label_font = pygame.font.Font("Roboto-Bold.ttf", 32)
+medium_font = pygame.font.Font("Roboto-Bold.ttf", 24)
 
 fps = 60
 timer = pygame.time.Clock()
@@ -193,6 +194,19 @@ while run:
     screen.fill(background_color)  # background color
     boxes = draw_grid(clicked, active_beat)
 
+    # bottom menu
+
+    play_pause = pygame.draw.rect(screen, gray, [50, HEIGHT - 150, 200, 100], 0, 5)
+    play_text = label_font.render("Play/Pause", True, white)
+    screen.blit(play_text, (70, HEIGHT - 130))
+
+    if playing:
+        play_text2 = medium_font.render("Playing", True, green)
+    else:
+        play_text2 = medium_font.render("Paused", True, green)
+
+    screen.blit(play_text2, (70, HEIGHT - 100))
+
     # play beats accordingly
     if beat_changed:
         play_notes()
@@ -215,6 +229,13 @@ while run:
                     ] *= (
                         -1
                     )  # if it is active, then deactivates, and if it is not active then lick will activate
+        # play pause button
+        if event.type == pygame.MOUSEBUTTONUP:
+            if play_pause.collidepoint(event.pos):
+                if playing:
+                    playing = False
+                elif not playing:
+                    playing = True
 
     beat_length = (fps * 60) // bpm
 
