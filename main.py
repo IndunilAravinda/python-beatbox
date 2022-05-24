@@ -46,6 +46,39 @@ beat_changed = True
 
 # main game
 
+# configure with sounds
+
+hi_hat = mixer.Sound("sounds\hi hat.WAV")
+clap = mixer.Sound("sounds\clap.WAV")
+crash = mixer.Sound("sounds\crash.WAV")
+kick = mixer.Sound("sounds\kick.WAV")
+snare = mixer.Sound("sounds\snare.WAV")
+tom = mixer.Sound("sounds\\tom.WAV")
+
+pygame.mixer.set_num_channels(instruments * 3)
+
+# playing beats function
+
+
+def play_notes():
+    for i in range(len(clicked)):
+        if clicked[i][active_beat] == 1:
+            if i == 0:
+                hi_hat.play()
+            if i == 1:
+                snare.play()
+            if i == 2:
+                kick.play()
+            if i == 3:
+                crash.play()
+            if i == 4:
+                clap.play()
+            if i == 5:
+                tom.play()
+
+
+# UI of the beatbox
+
 
 def draw_grid(clicks, beat):
 
@@ -160,6 +193,11 @@ while run:
     screen.fill(background_color)  # background color
     boxes = draw_grid(clicked, active_beat)
 
+    # play beats accordingly
+    if beat_changed:
+        play_notes()
+        beat_changed = False
+
     # pygame event handling
     for event in pygame.event.get():
 
@@ -195,5 +233,3 @@ while run:
     pygame.display.flip()
 
 pygame.quit()
-
-print("Hello")
